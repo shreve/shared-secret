@@ -33,8 +33,8 @@ module Secret
       # Each code is in the form "u-v". Split these values into arrays
       us, vs = codes.map { |code| code.split('-').map(&:to_i) }.transpose
 
-      denoms = us.map.with_index { |_, i| safemod li_denom(us, i) }
-      numers = us.map.with_index { |_, i| li_num(us, i) * denoms[i] }
+      denoms = us.map.with_index { |_, i| safemod li_denom(us.dup, i) }
+      numers = us.map.with_index { |_, i| li_num(us.dup, i) * denoms[i] }
       terms = numers.map.with_index { |term, i| term * vs[i] }
       secret = (terms.flatten.combine_like_terms % P).last
       BSEncode.decode(secret)
@@ -50,16 +50,13 @@ module Secret
     end
 
     def li_denom(us, i)
-      us = us.rotate(i)
-      u1 = us[0]
-      us = us[1..-1]
+      u1 = us.delete_at(i)
       us.map { |u| u1 - u }.reduce(:*)
     end
 
     def li_num(us, i)
-      us = us.rotate(i)
-      us = us[1..-1]
-      us.map { |u| [x, -1*u] }.reduce(:*)
+      us.delete_at(i)
+      us.map { |u| [x, -1 * u] }.reduce(:*)
     end
 
     def x
