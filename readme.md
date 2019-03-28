@@ -3,6 +3,8 @@ Shared Secrets
 
 Create shares of a secret code which need to be reunited to reveal the secret.
 
+**This is a proof of concept and hasn't been properly evaluated for security.**
+
 ## Usage
 
 This is a ruby library with an associated executable
