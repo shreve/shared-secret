@@ -21,8 +21,9 @@ module Secret
     def create(secret, shares:, required:)
       validate_arguments!(secret, shares, required)
 
-      coefficients = Array.new(required).map { rand(P) }
-      coefficients[0] = BSEncode.encode(secret)
+      secret_int = BSEncode.encode(secret)
+      coefficients = Array.new(required).map { rand(secret_int) }
+      coefficients[0] = secret_int
 
       Array.new(shares).map.with_index do |_, i|
         "#{i + 1}-#{f(i + 1, coefficients)}"
@@ -33,9 +34,9 @@ module Secret
       # Each code is in the form "u-v". Split these values into arrays
       us, vs = codes.map { |code| code.split('-').map(&:to_i) }.transpose
 
-      denoms = us.map.with_index { |_, i| safemod li_denom(us.dup, i) }
-      numers = us.map.with_index { |_, i| li_num(us.dup, i) * denoms[i] }
-      terms = numers.map.with_index { |term, i| term * vs[i] }
+      denoms = denominators(us)
+      numers = numerators(us)
+      terms = numers.map.with_index { |term, i| term * vs[i] * denoms[i] }
       secret = (terms.flatten.combine_like_terms % P).last
       BSEncode.decode(secret)
     end
@@ -47,6 +48,14 @@ module Secret
       raise ArgumentError, 'Secret must be at most 192 bytes' if secret.bytes.count > 192
       raise ArgumentError, 'Required must be at most shares' if required > shares
       raise ArgumentError, 'Required must be greater than 1' if required <= 1
+    end
+
+    def denominators(us)
+      us.map.with_index { |_, i| safemod li_denom(us.dup, i) }
+    end
+
+    def numerators(us)
+      us.map.with_index { |_, i| li_num(us.dup, i) }
     end
 
     def li_denom(us, i)
