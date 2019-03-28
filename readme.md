@@ -25,6 +25,8 @@ $ secret create 7 3 "Howdy, partner!" | tail -2 | xargs secret decode
 Unable to decode input
 ```
 
+This encoding is based on a 2048-bit prime and has a message space around 192 bytes.
+
 ## Under the Hood
 
 This project was inspired by a homework assignment in EECS 376 (Foundations of Computer Science) at the University of Michigan.
@@ -43,5 +45,4 @@ This library accepts strings as secrets and encodes them as numbers which can be
    ```
 
    This does require at least 2 shares, and only occurs rarely, but is still a vulnerability.
-2. This is currently based on a 1024-bit prime number. The message space could be increased by using a larger prime, but I'm not sure if that is necessary.
-3. This code relies on extensions of Ruby standard library classes Integer and Array. A good implementation wouldn't do that.
+2. This code relies on extensions of Ruby standard library classes Integer and Array. A good implementation wouldn't do that.
