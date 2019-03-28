@@ -17,12 +17,9 @@ module Secret
       '7122003364072216412790232025994459550445996685831487219061912310847062' \
       '423212150724846817512934536229184227621771474656325777949'.to_i.freeze
 
-
   class << self
     def create(secret, shares:, required:)
-      raise ArgumentError, "Shares must be less than #{P}" if shares >= P
-      raise ArgumentError, 'Required must be at most shares' if required > shares
-      raise ArgumentError, 'Required must be greater than 1' if required <= 1
+      validate_arguments!(secret, shares, required)
 
       coefficients = Array.new(required).map { rand(P) }
       coefficients[0] = BSEncode.encode(secret)
@@ -33,16 +30,24 @@ module Secret
     end
 
     def restore(codes)
-      codes = codes.map { |s| s.split('-').map(&:to_i) }
-      us = codes.map(&:first)
-      vs = codes.map { |a| a[1] }
+      # Each code is in the form "u-v". Split these values into arrays
+      us, vs = codes.map { |code| code.split('-').map(&:to_i) }.transpose
+
       denoms = us.map.with_index { |_, i| safemod li_denom(us, i) }
       numers = us.map.with_index { |_, i| li_num(us, i) * denoms[i] }
       terms = numers.map.with_index { |term, i| term * vs[i] }
-      BSEncode.decode((terms.flatten.combine_like_terms % P).last)
+      secret = (terms.flatten.combine_like_terms % P).last
+      BSEncode.decode(secret)
     end
 
     private
+
+    def validate_arguments!(secret, shares, required)
+      raise ArgumentError, "Shares must be less than #{P}" if shares >= P
+      raise ArgumentError, 'Secret must be at most 192 bytes' if secret.bytes.count > 192
+      raise ArgumentError, 'Required must be at most shares' if required > shares
+      raise ArgumentError, 'Required must be greater than 1' if required <= 1
+    end
 
     def li_denom(us, i)
       us = us.rotate(i)
