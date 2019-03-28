@@ -39,6 +39,8 @@ module Secret
       terms = numers.map.with_index { |term, i| term * vs[i] * denoms[i] }
       secret = (terms.flatten.combine_like_terms % P).last
       BSEncode.decode(secret)
+    rescue StandardError
+      raise FailedDecodeError, "Failed to decode secret from #{codes.size} shares"
     end
 
     private
@@ -81,5 +83,8 @@ module Secret
     def safemod(int)
       ModularArithmetic.invert(int, P)
     end
+  end
+
+  class FailedDecodeError < StandardError
   end
 end

@@ -5,6 +5,31 @@ Create shares of a secret code which need to be reunited to reveal the secret.
 
 ## Usage
 
+This is a ruby library with an associated executable
+
+```ruby
+# Create 7 shares of the password which require at least 3 to recreate
+Secret.create("Howdy, partner!", shares: 7, required: 3)
+# => [
+        [0] "1-1112273582787975695074844380307169353741255382365",
+        [1] "2-1875991816751276345070115490824050279206167488551",
+        [2] "3-2886525393117596696571705091964438315320864997297",
+        [3] "4-4143874311886936749579613183728333462085347908603",
+        [4] "5-5648038573059296504093839766115735719499616222469",
+        [5] "6-7399018176634675960114384839126645087563669938895",
+        [6] "7-9396813122613075117641248402761061566277509057881"
+    ]
+
+# Combine the shares to restore the secret
+Secret.restore(Secret.create("Howdy, partner!", shares: 7, required: 3))
+# => "Howdy, partner!"
+
+# The secret cannot be restored with too few shares
+Secret.restore(Secret.create("Howdy, partner!", shares: 7, required: 3).take(2))
+# => Secret::FailedDecodeError
+```
+
+
 ```bash
 # Create 7 shares of the password which require at least 3 to recreate
 $ secret create 7 3 "Howdy, partner!"
@@ -17,13 +42,16 @@ $ secret create 7 3 "Howdy, partner!"
 7-4914063166594202041718222159606011249442327768050
 
 # Combine the shares to restore the secret
-$ secret create 7 3 "Howdy, partner!" | xargs secret decode
+$ secret create 7 3 "Howdy, partner!" | xargs secret restore
 Howdy, partner!
 
 # The secret cannot be restored with too few shares
-$ secret create 7 3 "Howdy, partner!" | tail -2 | xargs secret decode
+$ secret create 7 3 "Howdy, partner!" | tail -2 | xargs secret restore
 Unable to decode input
 ```
+
+
+# Create
 
 This encoding is based on a 2048-bit prime and has a message space around 192 bytes.
 
@@ -40,9 +68,9 @@ This library accepts strings as secrets and encodes them as numbers which can be
 1. Occasionally a partial recovery is possible with fewer than required shares.
 
    ```bash
-   $ secret create 7 3 "Howdy, partner!" | tail -2 | xargs secret decode
+   $ secret create 7 3 "Howdy, partner!" | tail -2 | xargs secret restore
    X_wdy, partner!
    ```
 
-   This does require at least 2 shares, and only occurs rarely, but is still a vulnerability.
+   This does require at least 2 shares, and only occurs rarely, but is still a vulnerability. I have not had success consistently reproducing this.
 2. This code relies on extensions of Ruby standard library classes Integer and Array. A good implementation wouldn't do that.
