@@ -1,6 +1,6 @@
 require_relative 'secret/modular_arithmetic'
 require_relative 'secret/variable'
-require_relative 'secret/bsencode'
+require_relative 'secret/string_int'
 
 require_relative 'core_ext/integer'
 require_relative 'core_ext/array'
@@ -21,7 +21,7 @@ module Secret
     def create(secret, shares:, required:)
       validate_arguments!(secret, shares, required)
 
-      secret_int = BSEncode.encode(secret)
+      secret_int = StringInt.encode(secret)
       coefficients = Array.new(required).map { rand(secret_int) }
       coefficients[0] = secret_int
 
@@ -38,7 +38,7 @@ module Secret
       numers = numerators(us)
       terms = numers.map.with_index { |term, i| term * vs[i] * denoms[i] }
       secret = (terms.flatten.combine_like_terms % P).last
-      BSEncode.decode(secret)
+      StringInt.decode(secret)
     rescue StandardError
       raise FailedDecodeError, "Failed to decode secret from #{codes.size} shares"
     end

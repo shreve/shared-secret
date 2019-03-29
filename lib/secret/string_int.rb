@@ -1,8 +1,8 @@
 require 'base64'
 
 module Secret
-  # Turn strings into safe integers
-  module BSEncode
+  # Encode strings as integers in a reversible way
+  module StringInt
     class << self
       def encode(string)
         base64 = Base64.strict_encode64(string)
@@ -18,14 +18,10 @@ module Secret
         bytes = []
         while int > 0
           bytes << (int & 255)
-          int = int >> 8
+          int >>= 8
         end
         string = bytes.pack('c*')
         Base64.strict_decode64(string)
-      end
-
-      def recode(string)
-        decode(encode(string))
       end
     end
   end
