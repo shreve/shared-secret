@@ -5,6 +5,8 @@ Create shares of a secret code which need to be reunited to reveal the secret.
 
 **This is a proof of concept and hasn't been properly evaluated for security.**
 
+*I've recently been informed this is [Shamir's Secret Sharing (1979)](https://doi.org/10.1145%2F359168.359176).*
+
 ## Usage
 
 This is a ruby library with an associated executable
